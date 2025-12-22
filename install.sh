@@ -1,10 +1,17 @@
 #!/bin/sh
 
+set -e
+
+echo "🚀 CapRover NGINX Custom Pages Installer"
+
 # Detect CapRover NGINX container (nginx:1.27.2)
-NGINX_CONTAINER=$(docker ps --filter "ancestor=nginx:1.27.2" --format "{{.ID}}" | head -n 1)
+NGINX_CONTAINER=$(docker ps \
+  --filter "ancestor=nginx:1.27.2" \
+  --format "{{.ID}}" | head -n 1)
 
 if [ -z "$NGINX_CONTAINER" ]; then
   echo "❌ CapRover NGINX container not found"
+  echo "Make sure CapRover is running."
   exit 1
 fi
 
