@@ -4,9 +4,9 @@ set -e
 
 echo "🚀 CapRover NGINX Custom Pages Installer"
 
-# Detect CapRover NGINX container (nginx:1.27.2)
+# Detect CapRover NGINX container by name pattern (works with any nginx version)
 NGINX_CONTAINER=$(docker ps \
-  --filter "ancestor=nginx:1.27.2" \
+  --filter "name=captain-nginx" \
   --format "{{.ID}}" | head -n 1)
 
 if [ -z "$NGINX_CONTAINER" ]; then
@@ -15,7 +15,8 @@ if [ -z "$NGINX_CONTAINER" ]; then
   exit 1
 fi
 
-echo "✅ Found NGINX container: $NGINX_CONTAINER"
+NGINX_IMAGE=$(docker inspect --format='{{.Config.Image}}' "$NGINX_CONTAINER")
+echo "✅ Found NGINX container: $NGINX_CONTAINER ($NGINX_IMAGE)"
 
 TARGET_DIR="/usr/share/nginx/default"
 REPO_BASE_URL="https://raw.githubusercontent.com/AlmossaidLLC/caprover-nginx-pages/main"
