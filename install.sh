@@ -39,7 +39,10 @@ rm -rf "$TEMP_DIR"
 echo "✅ Files copied successfully"
 
 # Reload NGINX
-docker exec "$NGINX_CONTAINER" nginx -s reload
+if ! docker exec "$NGINX_CONTAINER" nginx -s reload; then
+  echo "⚠️  NGINX reload failed, forcing service update..."
+  docker service update captain-nginx --force
+fi
 
 echo "🔄 NGINX reloaded"
 echo "✨ Installation complete!"
