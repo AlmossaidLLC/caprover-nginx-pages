@@ -19,7 +19,7 @@ NGINX_IMAGE=$(docker inspect --format='{{.Config.Image}}' "$NGINX_CONTAINER")
 echo "✅ Found NGINX container: $NGINX_CONTAINER ($NGINX_IMAGE)"
 
 TARGET_DIR="/usr/share/nginx/default"
-REPO_BASE_URL="https://raw.githubusercontent.com/AlmossaidLLC/caprover-nginx-pages/main"
+REPO_BASE_URL="https://raw.githubusercontent.com/AlmossaidLLC/caprover-nginx-pages/main/theme/default"
 TEMP_DIR=$(mktemp -d)
 
 # Download files from GitHub
