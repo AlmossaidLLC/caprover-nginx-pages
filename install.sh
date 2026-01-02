@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 set -e
 
 echo "🚀 CapRover NGINX Persistent Pages Installer"

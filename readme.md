@@ -15,7 +15,7 @@ Easily customize the default NGINX error and landing pages for your CapRover ser
 Run this command on your CapRover server:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/AlmossaidLLC/caprover-nginx-pages/main/install.sh | sudo sh
+curl -fsSL https://raw.githubusercontent.com/AlmossaidLLC/caprover-nginx-pages/main/install.sh | sudo bash
 ```
 
 This will automatically replace the default NGINX pages with the custom versions from this repository.
@@ -23,10 +23,18 @@ This will automatically replace the default NGINX pages with the custom versions
 ## Theme Selection
 You can choose a theme by passing the `--theme` argument. Available themes: `default`, `dark`, `winter`, `orange`.
 
-Example:
+**Note:** For remote installation on your server with a specific theme, you need to download the script first since arguments cannot be passed through pipes.
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/AlmossaidLLC/caprover-nginx-pages/main/install.sh | sudo sh --theme=winter
+# On your CapRover server:
+curl -fsSL https://raw.githubusercontent.com/AlmossaidLLC/caprover-nginx-pages/main/install.sh -o install.sh
+sudo bash install.sh --theme=dark
+```
+
+Or download and run locally (on your machine):
+
+```bash
+./install.sh --theme=winter
 ```
 
 Or download and run locally:
