@@ -6,7 +6,24 @@ echo "🚀 CapRover NGINX Persistent Pages Installer"
 # ---- CONFIG ----
 HOST_BASE="/captain/data/nginx-pages/default"
 NGINX_TARGET="/usr/share/nginx/default"
-REPO_BASE_URL="https://raw.githubusercontent.com/AlmossaidLLC/caprover-nginx-pages/main/theme/default"
+THEME="default"
+
+# Parse arguments
+while [[ $# -gt 0 ]]; do
+  case $1 in
+    --theme=*)
+      THEME="${1#*=}"
+      shift
+      ;;
+    *)
+      echo "Unknown option: $1"
+      echo "Usage: $0 [--theme=<theme>]"
+      exit 1
+      ;;
+  esac
+done
+
+REPO_BASE_URL="https://raw.githubusercontent.com/AlmossaidLLC/caprover-nginx-pages/main/theme/$THEME"
 
 # ---- CHECKS ----
 if ! command -v docker >/dev/null 2>&1; then
@@ -24,7 +41,7 @@ echo "📁 Preparing persistent directory..."
 mkdir -p "$HOST_BASE"
 
 # ---- DOWNLOAD FILES ----
-echo "📥 Downloading NGINX pages..."
+echo "📥 Downloading NGINX pages for theme: $THEME..."
 curl -fsSL "$REPO_BASE_URL/index.html" -o "$HOST_BASE/index.html"
 curl -fsSL "$REPO_BASE_URL/error_generic_catch_all.html" -o "$HOST_BASE/error_generic_catch_all.html"
 curl -fsSL "$REPO_BASE_URL/captain_502_custom_error_page.html" -o "$HOST_BASE/captain_502_custom_error_page.html"
@@ -45,4 +62,4 @@ echo "🔄 Restarting NGINX service..."
 docker service update --force captain-nginx
 
 echo "✨ Installation complete!"
-echo "✅ Pages are now persistent across reboots"
+echo "✅ Pages are now persistent across reboots (Theme: $THEME)"
