@@ -1,48 +1,48 @@
 #!/bin/sh
-
 set -e
 
-echo "🚀 CapRover NGINX Custom Pages Installer"
+echo "🚀 CapRover NGINX Persistent Pages Installer"
 
-# Detect CapRover NGINX container by name pattern (works with any nginx version)
-NGINX_CONTAINER=$(docker ps \
-  --filter "name=captain-nginx" \
-  --format "{{.ID}}" | head -n 1)
+# ---- CONFIG ----
+HOST_BASE="/captain/data/nginx-pages/default"
+NGINX_TARGET="/usr/share/nginx/default"
+REPO_BASE_URL="https://raw.githubusercontent.com/AlmossaidLLC/caprover-nginx-pages/main/theme/default"
 
-if [ -z "$NGINX_CONTAINER" ]; then
-  echo "❌ CapRover NGINX container not found"
-  echo "Make sure CapRover is running."
+# ---- CHECKS ----
+if ! command -v docker >/dev/null 2>&1; then
+  echo "❌ Docker is not installed"
   exit 1
 fi
 
-NGINX_IMAGE=$(docker inspect --format='{{.Config.Image}}' "$NGINX_CONTAINER")
-echo "✅ Found NGINX container: $NGINX_CONTAINER ($NGINX_IMAGE)"
-
-TARGET_DIR="/usr/share/nginx/default"
-REPO_BASE_URL="https://raw.githubusercontent.com/AlmossaidLLC/caprover-nginx-pages/main/theme/default"
-TEMP_DIR=$(mktemp -d)
-
-# Download files from GitHub
-echo "📥 Downloading files..."
-curl -fsSL "$REPO_BASE_URL/index.html" -o "$TEMP_DIR/index.html"
-curl -fsSL "$REPO_BASE_URL/error_generic_catch_all.html" -o "$TEMP_DIR/error_generic_catch_all.html"
-curl -fsSL "$REPO_BASE_URL/captain_502_custom_error_page.html" -o "$TEMP_DIR/captain_502_custom_error_page.html"
-
-# Copy files to container
-docker cp "$TEMP_DIR/index.html" "$NGINX_CONTAINER:$TARGET_DIR/index.html"
-docker cp "$TEMP_DIR/error_generic_catch_all.html" "$NGINX_CONTAINER:$TARGET_DIR/error_generic_catch_all.html"
-docker cp "$TEMP_DIR/captain_502_custom_error_page.html" "$NGINX_CONTAINER:$TARGET_DIR/captain_502_custom_error_page.html"
-
-# Cleanup temp directory
-rm -rf "$TEMP_DIR"
-
-echo "✅ Files copied successfully"
-
-# Reload NGINX
-if ! docker exec "$NGINX_CONTAINER" nginx -s reload; then
-  echo "⚠️  NGINX reload failed, forcing service update..."
-  docker service update captain-nginx --force
+if ! docker service ls | grep -q captain-nginx; then
+  echo "❌ CapRover NGINX service not found"
+  exit 1
 fi
 
-echo "🔄 NGINX reloaded"
+# ---- PREPARE HOST DIRECTORY ----
+echo "📁 Preparing persistent directory..."
+mkdir -p "$HOST_BASE"
+
+# ---- DOWNLOAD FILES ----
+echo "📥 Downloading NGINX pages..."
+curl -fsSL "$REPO_BASE_URL/index.html" -o "$HOST_BASE/index.html"
+curl -fsSL "$REPO_BASE_URL/error_generic_catch_all.html" -o "$HOST_BASE/error_generic_catch_all.html"
+curl -fsSL "$REPO_BASE_URL/captain_502_custom_error_page.html" -o "$HOST_BASE/captain_502_custom_error_page.html"
+
+# ---- CHECK IF MOUNT EXISTS ----
+if docker service inspect captain-nginx \
+  --format '{{json .Spec.TaskTemplate.ContainerSpec.Mounts}}' | grep -q "$HOST_BASE"; then
+  echo "✅ Volume already mounted"
+else
+  echo "🔗 Mounting persistent volume to NGINX service..."
+  docker service update \
+    --mount-add type=bind,src="$HOST_BASE",dst="$NGINX_TARGET" \
+    captain-nginx
+fi
+
+# ---- FORCE REDEPLOY ----
+echo "🔄 Restarting NGINX service..."
+docker service update --force captain-nginx
+
 echo "✨ Installation complete!"
+echo "✅ Pages are now persistent across reboots"
